@@ -18,7 +18,8 @@ app.get("/", (req, res) => {
   res.send("Hospital API Running");
 });
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
 const authRoutes = require("./routes/authRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const appointmentRoutes = require("./routes/appointmentRoutes");
