@@ -7,6 +7,11 @@ const appointmentSchema = new mongoose.Schema({
     required: true
   },
 
+  patientEmail: {
+    type: String,
+    required: true
+  },
+
   doctorName: {
     type: String,
     required: true
@@ -25,6 +30,28 @@ const appointmentSchema = new mongoose.Schema({
   status: {
     type: String,
     default: "Pending"
+  },
+
+  reviewed: {
+    type: Boolean,
+    default: false
+  },
+
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5,
+    default: null
+  },
+
+  review: {
+    type: String,
+    default: ""
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 
 });

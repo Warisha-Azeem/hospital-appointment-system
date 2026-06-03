@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Appointment() {
 
   const [patientName, setPatientName] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   const steps = ["Patient Info", "Select Doctor", "Choose Date", "Confirm"];
 
@@ -18,32 +22,95 @@ function Appointment() {
     return currentStep;
   };
 
+  // Check doctor availability when doctor, date, or time changes
+  useEffect(() => {
+    if (!doctorName || !date || !time) {
+      setIsAvailable(true);
+      return;
+    }
+
+    const checkAvailability = async () => {
+      setCheckingAvailability(true);
+      try {
+        const response = await axios.get(
+          "${import.meta.env.VITE_API_URL}/appointments"
+        );
+
+        const appointments = response.data || [];
+        
+        // Check if doctor has an appointment at the same date and time
+        const conflict = appointments.some(
+          (apt) =>
+            apt.doctorName === doctorName &&
+            apt.date === date &&
+            apt.time === time
+        );
+
+        setIsAvailable(!conflict);
+      } catch (error) {
+        console.error("Error checking availability:", error);
+        // If we can't check, assume available (fail open)
+        setIsAvailable(true);
+      } finally {
+        setCheckingAvailability(false);
+      }
+    };
+
+    checkAvailability();
+  }, [doctorName, date, time]);
+
+  const navigate = useNavigate();
+
   const handleSubmit = async () => {
+
+    // simple client-side validation
+    if (!patientName || !patientEmail || !doctorName || !date || !time) {
+      alert("Please fill all fields before confirming the appointment.");
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(patientEmail)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
+    // Check availability before submitting
+    if (!isAvailable) {
+      alert("This time slot is no longer available. Please select a different date or time.");
+      return;
+    }
 
     try {
 
-      await axios.post(
-        "http://localhost:5000/api/appointments/book",
+      const response = await axios.post(
+        "${import.meta.env.VITE_API_URL}/api/appointments/book",
         {
           patientName,
+          patientEmail,
           doctorName,
           date,
           time
         }
       );
 
-      alert("Appointment Booked");
+      const appointment = response?.data?.appointment || { patientName, patientEmail, doctorName, date, time };
+
       setCurrentStep(1);
       setPatientName("");
+      setPatientEmail("");
       setDoctorName("");
       setDate("");
       setTime("");
 
+      navigate("/confirmation", { state: { appointment } });
+
     } catch (error) {
 
-      console.log(error);
-
-      alert("Error");
+      console.error(error);
+      const message = error?.response?.data?.message || error.message || "Error booking appointment.";
+      alert(message);
     }
   };
 
@@ -74,7 +141,10 @@ function Appointment() {
             <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>👤 Patient Name</label>
             <input className="input" type="text" placeholder="John Doe" value={patientName} onChange={(e) => setPatientName(e.target.value)} />
 
-            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>Doctor</label>
+            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, marginTop: "16px" }}>📧 Email</label>
+            <input className="input" type="email" placeholder="your.email@example.com" value={patientEmail} onChange={(e) => setPatientEmail(e.target.value)} />
+
+            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, marginTop: "16px" }}>Doctor</label>
             <select className="select" value={doctorName} onChange={(e) => setDoctorName(e.target.value)}>
               <option value="">Select Doctor</option>
               <option value="Dr Ahmed">Dr Ahmed - Cardiologist</option>
@@ -89,7 +159,32 @@ function Appointment() {
             <label style={{ display: "block", marginBottom: "8px", fontWeight: 600, marginTop: "16px" }}>⏰ Time</label>
             <input className="input" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
 
-            <button className="button button-primary" style={{ width: "100%", marginTop: "24px" }} onClick={handleSubmit}>
+            {/* Availability status message */}
+            {doctorName && date && time && (
+              <div style={{ 
+                marginTop: "16px", 
+                padding: "12px", 
+                borderRadius: "8px", 
+                backgroundColor: isAvailable ? "rgba(22, 163, 74, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                color: isAvailable ? "var(--accent)" : "#ef4444",
+                fontSize: "0.95rem"
+              }}>
+                {checkingAvailability ? (
+                  "⏳ Checking availability..."
+                ) : isAvailable ? (
+                  "✓ This slot is available"
+                ) : (
+                  "✗ This slot is already booked. Please choose a different time."
+                )}
+              </div>
+            )}
+
+            <button 
+              className="button button-primary" 
+              style={{ width: "100%", marginTop: "24px", opacity: (isAvailable && !checkingAvailability) ? 1 : 0.6, cursor: (isAvailable && !checkingAvailability) ? "pointer" : "not-allowed" }} 
+              onClick={handleSubmit}
+              disabled={!isAvailable || checkingAvailability}
+            >
               ✓ Confirm Appointment
             </button>
           </div>

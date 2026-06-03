@@ -17,10 +17,25 @@ const userSchema = new mongoose.Schema({
     required: true
   },
 
+  phone: {
+    type: String,
+    default: ""
+  },
+
+  profilePicture: {
+    type: String,
+    default: ""
+  },
+
   role: {
     type: String,
     enum: ["patient", "doctor", "admin"],
     default: "patient"
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
   }
 });
 

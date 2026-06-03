@@ -4,6 +4,8 @@ import { useState } from "react";
 function Navbar() {
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const userName = localStorage.getItem("userName");
+  const userRole = localStorage.getItem("userRole");
 
   const isActive = (path) => location.pathname === path;
 
@@ -12,6 +14,14 @@ function Navbar() {
     if (searchQuery.trim()) {
       window.location.href = `/doctors?search=${encodeURIComponent(searchQuery)}`;
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
+    window.location.href = "/";
   };
 
   return (
@@ -23,7 +33,32 @@ function Navbar() {
         <Link className={`nav-link ${isActive("/") ? "active" : ""}`} to="/">Home</Link>
         <Link className={`nav-link ${isActive("/doctors") ? "active" : ""}`} to="/doctors">Doctors</Link>
         <Link className={`nav-link ${isActive("/appointment") ? "active" : ""}`} to="/appointment">Appointment</Link>
+        <Link className={`nav-link ${isActive("/appointments") ? "active" : ""}`} to="/appointments">My Appointments</Link>
+        {userRole === "doctor" && (
+          <Link className={`nav-link ${isActive("/doctor-dashboard") ? "active" : ""}`} to="/doctor-dashboard">Doctor Dashboard</Link>
+        )}
+        {userRole === "admin" && (
+          <Link className={`nav-link ${isActive("/analytics") ? "active" : ""}`} to="/analytics">Analytics</Link>
+        )}
         <Link className={`nav-link ${isActive("/admin") ? "active" : ""}`} to="/admin">Admin</Link>
+        {userName && (
+          <>
+            <Link className={`nav-link ${isActive("/profile") ? "active" : ""}`} to="/profile">👤 Profile</Link>
+            <button 
+              className="button" 
+              style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer", fontSize: "0.95rem", fontWeight: 600, padding: 0 }}
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </>
+        )}
+        {!userName && (
+          <>
+            <Link className={`nav-link ${isActive("/login") ? "active" : ""}`} to="/login">Login</Link>
+            <Link className={`nav-link ${isActive("/register") ? "active" : ""}`} to="/register">Register</Link>
+          </>
+        )}
       </nav>
       <form className="search-bar" onSubmit={handleSearch} role="search" aria-label="Search doctors">
         <input

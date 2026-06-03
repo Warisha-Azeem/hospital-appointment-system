@@ -1,19 +1,24 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function Doctors() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredDoctors, setFilteredDoctors] = useState([]);
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/doctors")
+      .get("${import.meta.env.VITE_API_URL}/api/doctors")
       .then((response) => {
-        setDoctors(response.data || []);
+        const list = response.data || [];
+        setDoctors(list);
+        setFilteredDoctors(list);
       })
       .catch((err) => {
         console.error(err);
@@ -23,6 +28,28 @@ function Doctors() {
         setLoading(false);
       });
   }, []);
+
+  // read search from URL (navbar search redirects to /doctors?search=...)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const q = params.get("search") || "";
+    setSearchQuery(q);
+  }, [location.search]);
+
+  // filter doctors when list or query changes
+  useEffect(() => {
+    const q = (searchQuery || "").toLowerCase().trim();
+    if (!q) {
+      setFilteredDoctors(doctors);
+      return;
+    }
+    const filtered = doctors.filter((d) => {
+      const name = (d.name || "").toLowerCase();
+      const spec = (d.specialization || "").toLowerCase();
+      return name.includes(q) || spec.includes(q);
+    });
+    setFilteredDoctors(filtered);
+  }, [doctors, searchQuery]);
 
   return (
     <main className="site-shell">
@@ -37,13 +64,28 @@ function Doctors() {
           <div style={{ textAlign: "center", color: "var(--muted)", padding: "60px 0" }}>Loading doctors...</div>
         ) : error ? (
           <div style={{ textAlign: "center", color: "#d97706", padding: "60px 0" }}>{error}</div>
-        ) : doctors.length === 0 ? (
+        ) : filteredDoctors.length === 0 ? (
           <div style={{ textAlign: "center", color: "var(--muted)", padding: "60px 0" }}>
-            No doctors available right now. Please check back later.
+            No doctors found matching your search. Please adjust filters.
           </div>
         ) : (
-          <div className="doctor-grid">
-            {doctors.map((doctor) => (
+          <>
+            <div style={{ margin: "18px 0", display: "flex", gap: "12px", alignItems: "center" }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  className="search-bar"
+                  type="search"
+                  placeholder="Search by name or specialization..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  aria-label="Search doctors by name or specialization"
+                />
+              </div>
+              <div style={{ color: "var(--muted)", fontWeight: 700 }}>{filteredDoctors.length} results</div>
+            </div>
+
+            <div className="doctor-grid">
+            {filteredDoctors.map((doctor) => (
               <div key={doctor._id} className="doctor-card">
                 <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
                   <div style={{ width: "72px", height: "72px", borderRadius: "50%", background: "var(--accent-soft)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2rem", flexShrink: 0 }}>👨‍⚕️</div>
@@ -76,8 +118,11 @@ function Doctors() {
               </div>
             ))}
           </div>
+          </>
         )}
+
       </section>
+    
     </main>
   );
 }

@@ -86,4 +86,40 @@ router.post("/login", async (req, res) => {
 
 });
 
+// Get user profile by ID
+router.get("/profile/:id", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update user profile
+router.put("/profile/:id", async (req, res) => {
+  try {
+    const { name, phone, profilePicture } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, phone, profilePicture },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router;
