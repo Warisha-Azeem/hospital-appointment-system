@@ -22,7 +22,7 @@ function Login() {
     try {
 
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/auth/login",
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
         {
           email,
           password

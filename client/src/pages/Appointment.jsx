@@ -33,7 +33,7 @@ function Appointment() {
       setCheckingAvailability(true);
       try {
         const response = await axios.get(
-          "${import.meta.env.VITE_API_URL}/appointments"
+          `${import.meta.env.VITE_API_URL}/appointments`
         );
 
         const appointments = response.data || [];
@@ -85,7 +85,7 @@ function Appointment() {
     try {
 
       const response = await axios.post(
-        "${import.meta.env.VITE_API_URL}/api/appointments/book",
+        `${import.meta.env.VITE_API_URL}/api/appointments/book`,
         {
           patientName,
           patientEmail,

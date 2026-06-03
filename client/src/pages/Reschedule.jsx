@@ -20,7 +20,7 @@ function Reschedule() {
     const fetchAppointment = async () => {
       try {
         const response = await axios.get(
-          "${import.meta.env.VITE_API_URL}/appointments"
+          `${import.meta.env.VITE_API_URL}/appointments`
         );
         const apt = response.data.find((a) => a._id === appointmentId);
         if (apt) {
@@ -58,7 +58,7 @@ function Reschedule() {
       setCheckingAvailability(true);
       try {
         const response = await axios.get(
-          "${import.meta.env.VITE_API_URL}/appointments"
+          `${import.meta.env.VITE_API_URL}/appointments`
         );
 
         const appointments = response.data || [];

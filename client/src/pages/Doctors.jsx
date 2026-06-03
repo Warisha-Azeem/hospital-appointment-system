@@ -14,7 +14,7 @@ function Doctors() {
 
   useEffect(() => {
     axios
-      .get("${import.meta.env.VITE_API_URL}/api/doctors")
+      .get(`${import.meta.env.VITE_API_URL}/api/doctors`)
       .then((response) => {
         const list = response.data || [];
         setDoctors(list);

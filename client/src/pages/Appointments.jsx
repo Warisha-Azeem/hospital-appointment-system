@@ -55,12 +55,12 @@ function Appointments() {
 
   useEffect(() => {
     axios
-      .get("${import.meta.env.VITE_API_URL}/appointments")
+      .get(`${import.meta.env.VITE_API_URL}/appointments`)
       .then((res) => setAppointments(res.data));
   }, []);
 
   useEffect(() => {
-    const socket = io("${import.meta.env.VITE_API_URL}");
+    const socket = io(`${import.meta.env.VITE_API_URL}`);
 
     socket.on("appointmentStatusUpdated", (payload) => {
       if (!payload?.appointment) return;
