@@ -17,7 +17,9 @@ const io = new Server(server, {
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: "https://hospital-appointment-system-two.vercel.app"
+}))
 app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI)
